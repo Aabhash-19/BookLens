@@ -1,89 +1,70 @@
-# 📖 BookLens
+# BookLens
 
-![BookLens Banner](https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=2000&auto=format&fit=crop)
+BookLens is an intelligent, full-stack web application engineered to modernize personal library management and book discovery. By integrating advanced machine learning for semantic search and computer vision for automated book identification, the platform provides a highly personalized and automated user experience.
 
-**BookLens** is an intelligent, beautifully designed full-stack web application that brings your reading life into the future. By combining cutting-edge AI image recognition, personalized machine learning recommendations, and a premium glassmorphic UI, BookLens makes discovering, tracking, and managing your library an absolute joy.
+## Project Overview
 
----
+The core objective of BookLens is to eliminate the friction typically associated with manual cataloging of physical books. Users can simply provide an image of a book cover or barcode, and the system's computer vision pipeline automatically identifies the book, retrieves its metadata from external aggregators, and allows the user to categorize it within their library. Furthermore, the application features an explicit preference-driven recommendation engine that utilizes vector embeddings to suggest contextually relevant literature.
 
-## ✨ Features
+## Key Features and Implementation Details
 
-### 📸 AI-Powered Book Scanning
-Point your camera at a book cover or barcode (or upload an image), and BookLens will instantly identify it. 
-- **Optical Character Recognition (OCR):** Powered by Tesseract to read text directly off book covers.
-- **Barcode Detection:** Instantly parses ISBNs using PyZbar.
-- **Smart Image Processing:** Auto-resizing, denoising, and WebP compression via OpenCV and Pillow for lightning-fast uploads.
+### Computer Vision and OCR Pipeline
+The automated book identification system relies on a multi-stage image processing pipeline:
+- **Image Preprocessing:** Uploaded images are immediately processed on the backend using OpenCV and the Python Imaging Library (Pillow). The pipeline handles auto-resizing, denoising, and compression into the WebP format for optimal storage efficiency.
+- **Optical Character Recognition (OCR):** The system utilizes Tesseract OCR to extract text from book covers when a barcode is unavailable. The extracted text is then cross-referenced against external book metadata databases.
+- **Barcode Detection:** For structured identification, the pipeline integrates PyZbar to rapidly parse ISBN barcodes, ensuring high-accuracy data retrieval.
 
-### 🧠 Semantic AI Recommendations
-Discover your next favorite book with an advanced ML engine.
-- **Vector Embeddings:** Uses HuggingFace `SentenceTransformers` to generate semantic profiles for users and books.
-- **Explicit Preference Re-ranking:** Automatically boosts recommendations based on your explicitly chosen favorite authors, genres, and languages.
-- **Cold-Start Handling:** Seamlessly blends popular trends with your personal library history.
+### Recommendation Engine and Semantic Search
+BookLens employs a sophisticated machine learning approach to book discovery, moving beyond basic genre filtering:
+- **Vector Embeddings:** The recommendation system is powered by HuggingFace `SentenceTransformers`. Both users and books are mapped into a high-dimensional vector space, allowing the system to calculate cosine similarities between user reading histories and potential recommendations.
+- **Explicit Preference Re-ranking:** To address the cold-start problem and ensure high relevance, the algorithm applies artificial score boosting based on explicit user preferences (e.g., preferred authors, genres, and languages) stored in the database.
+- **Dynamic Re-evaluation:** As users interact with their library, their semantic profiles are continuously re-calculated in the background, ensuring recommendations evolve alongside their reading habits.
 
-### 📚 Personal Library Management
-- Track your books across custom states: *Want to Read*, *Reading Now*, *Finished*, and *Favourited*.
-- Leave personal ratings and notes on your reads.
-- Syncs seamlessly with your personalized recommendation engine.
+### Library State Management
+The application provides robust state management for personal libraries:
+- Users can track books across distinct relational states: Want to Read, Reading Now, Finished, and Favourited.
+- The system supports granular interactions, allowing users to append personal ratings and detailed notes to specific library entries.
 
-### 👤 Dynamic User Profiles
-- **Real-time Avatar Uploads:** Custom profile picture uploads processed into optimized WebP formats and stored in MinIO.
-- **Instant Sync:** Built with an optimistic React Context architecture that ensures changes (like updating your username or avatar) instantly reflect across the entire app without a page reload.
+### User Authentication and Profile Management
+- The system implements secure, token-based authentication.
+- Profile management includes the ability to dynamically update usernames and upload custom profile pictures.
+- Avatar uploads are processed asynchronously, converted to highly efficient WebP formats, and stored in an S3-compatible object storage system. The frontend utilizes an optimistic state architecture to ensure UI updates are reflected instantaneously without requiring a page reload.
 
----
+## Technology Stack
 
-## 🛠️ Tech Stack
+The application is built upon a scalable, containerized microservice architecture.
 
-BookLens is built using a modern, scalable, and containerized microservice architecture.
+### Frontend Technologies
+- **Framework:** Next.js 14 (React)
+- **Styling:** Vanilla CSS and Tailwind CSS, utilizing a custom design system focused on glassmorphism and modern UI principles.
+- **State Management:** React Context API optimized for optimistic UI updates.
 
-### **Frontend**
-- **Framework:** [Next.js 14](https://nextjs.org/) (React)
-- **Styling:** Vanilla CSS & [Tailwind CSS](https://tailwindcss.com/)
-- **Design System:** Custom glassmorphism, dynamic micro-animations, and vibrant gradients.
-- **Icons:** Lucide React
+### Backend Technologies
+- **Framework:** FastAPI (Python)
+- **Database ORM:** SQLAlchemy (Async) for high-performance, non-blocking database operations.
+- **Machine Learning:** HuggingFace `SentenceTransformers` and PyTorch.
+- **Image Processing:** OpenCV, Pillow, PyTesseract, and PyZbar.
 
-### **Backend**
-- **Framework:** [FastAPI](https://fastapi.tiangolo.com/) (Python)
-- **Database ORM:** SQLAlchemy (Async)
-- **Machine Learning:** HuggingFace `SentenceTransformers`, PyTorch
-- **Image Processing:** OpenCV, Pillow, PyTesseract, PyZbar
+### Infrastructure and Storage
+- **Relational Database:** PostgreSQL
+- **Object Storage:** MinIO (S3-compatible storage utilized for persistent avatar and book scan storage).
+- **Containerization:** Docker and Docker Compose for seamless orchestration across environments.
 
-### **Infrastructure & Storage**
-- **Database:** PostgreSQL
-- **Object Storage:** MinIO (S3-compatible storage for avatars and book scans)
-- **Containerization:** Docker & Docker Compose
+## Deployment Instructions
 
----
+The application is fully containerized and designed to be deployed to any Docker-compatible hosting environment.
 
-## 🚀 Getting Started (Local Development)
+1. **Clone the Repository**
+   Clone the repository to your production server.
 
-### Prerequisites
-Make sure you have [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/) installed on your machine.
+2. **Environment Configuration**
+   Duplicate the provided `.env.example` file to create a `.env` file. You must populate this file with your production database credentials, API keys, and secure cryptographic secrets for token generation.
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/Aabhash-19/BookLens.git
-cd BookLens
-```
+3. **Container Orchestration**
+   Execute the deployment via Docker Compose. The `--build` flag ensures that the latest source code is compiled into the production images, and the `-d` flag runs the services in the background.
+   ```bash
+   docker compose up -d --build
+   ```
 
-### 2. Configure Environment Variables
-Copy the provided example environment file and update it with your secrets.
-```bash
-cp .env.example .env
-```
-
-### 3. Spin up the containers
-Using Docker Compose, you can start the entire stack (Database, Object Storage, API, and Frontend) with a single command:
-```bash
-docker compose up -d --build
-```
-
-### 4. Access the Application
-- **Frontend App:** [http://localhost:3000](http://localhost:3000)
-- **Backend API Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
-- **MinIO Console:** [http://localhost:9001](http://localhost:9001)
-
----
-
-## 🎨 Design Philosophy
-
-BookLens was engineered with a strict **"Visual Excellence"** policy. We avoided generic palettes, opting instead for curated HSL colors, deep dark modes, and smooth hover state transitions. The UI isn't just a shell—it reacts, breathes, and provides immediate visual feedback to create a premium user experience.
+4. **Network Configuration**
+   In a production environment, it is highly recommended to place the application behind a reverse proxy (such as Nginx or Traefik) and configure SSL/TLS certificates to secure API communications and user data. Ensure that the proxy correctly routes traffic to the respective Next.js frontend and FastAPI backend containers.
