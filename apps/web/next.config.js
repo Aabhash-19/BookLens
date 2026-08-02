@@ -7,6 +7,8 @@ const nextConfig = {
       { protocol: "https", hostname: "covers.openlibrary.org" },
       { protocol: "https", hostname: "books.google.com" },
       { protocol: "http", hostname: "localhost" },
+      { protocol: "https", hostname: "*.onrender.com" },
+      { protocol: "https", hostname: "*.supabase.co" },
     ],
   },
 };
