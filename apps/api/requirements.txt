@@ -16,7 +16,7 @@ pytesseract
 pyzbar
 sentence-transformers
 pgvector
-minio
+boto3
 redis
 slowapi
 python-dotenv
