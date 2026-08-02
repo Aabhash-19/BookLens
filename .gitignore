@@ -25,7 +25,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+/apps/api/lib/
 lib64/
 parts/
 sdist/
@@ -64,3 +64,6 @@ yarn-error.log*
 
 # Temporary files created during debugging
 test.jpg
+Demo vid.mov
+images.jpeg
+the-great-gatsby.jpg
