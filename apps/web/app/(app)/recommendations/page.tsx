@@ -11,7 +11,7 @@ import clsx from "clsx";
 
 export default function RecommendationsPage() {
   const router = useRouter();
-  const { token, user } = useAuth();
+  const { token, user, loading: authLoading } = useAuth();
   const [recs, setRecs] = useState<api.Recommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -90,8 +90,8 @@ export default function RecommendationsPage() {
   }, [filterTitle, token]);
 
   useEffect(() => {
-    if (!user && !token) router.push("/auth/login");
-  }, [user, token, router]);
+    if (!authLoading && !user && !token) router.push("/auth/login");
+  }, [authLoading, user, token, router]);
 
   useEffect(() => {
     if (!token) return;

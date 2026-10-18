@@ -19,15 +19,15 @@ const TABS = [
 
 export default function LibraryPage() {
   const router = useRouter();
-  const { token, user } = useAuth();
+  const { token, user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("want_to_read");
   const [entries, setEntries] = useState<api.LibraryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user && !token) router.push("/auth/login");
-  }, [user, token, router]);
+    if (!authLoading && !user && !token) router.push("/auth/login");
+  }, [authLoading, user, token, router]);
 
   useEffect(() => {
     if (!token) return;

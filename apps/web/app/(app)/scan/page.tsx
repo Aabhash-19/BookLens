@@ -12,7 +12,7 @@ type Stage = "idle" | "camera" | "preview" | "processing" | "result" | "confirm"
 
 export default function ScanPage() {
   const router = useRouter();
-  const { token, user } = useAuth();
+  const { token, user, loading: authLoading } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -25,10 +25,10 @@ export default function ScanPage() {
   const [error, setError] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
-  // Redirect if not logged in
+  // Redirect if not logged in — wait for auth to rehydrate from cookie first
   useEffect(() => {
-    if (!user && !token) router.push("/auth/login");
-  }, [user, token, router]);
+    if (!authLoading && !user && !token) router.push("/auth/login");
+  }, [authLoading, user, token, router]);
 
   // Cleanup camera stream on unmount
   useEffect(() => {
