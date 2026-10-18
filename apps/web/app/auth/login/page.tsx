@@ -13,19 +13,26 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showSlowHint, setShowSlowHint] = useState(false);
+
   const [error, setError] = useState("");
+  let slowTimer: ReturnType<typeof setTimeout> | null = null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setShowSlowHint(false);
     setLoading(true);
+    slowTimer = setTimeout(() => setShowSlowHint(true), 5000);
     try {
       await login(email, password);
       router.push("/scan");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Invalid credentials.");
     } finally {
+      if (slowTimer) clearTimeout(slowTimer);
       setLoading(false);
+      setShowSlowHint(false);
     }
   };
 
@@ -103,6 +110,11 @@ export default function LoginPage() {
             >
               {loading ? <Loader2 size={20} className="animate-spin" /> : "Sign in"}
             </button>
+            {showSlowHint && (
+              <p className="text-center text-xs text-white/40 animate-fade-in">
+                ⏳ Server is waking up — this can take up to 30s on first load…
+              </p>
+            )}
           </form>
         </div>
 

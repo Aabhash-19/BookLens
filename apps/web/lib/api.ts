@@ -12,6 +12,8 @@ class ApiError extends Error {
   }
 }
 
+const TIMEOUT_MS = 20_000; // 20 s — accommodates Render cold-start
+
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -29,7 +31,30 @@ async function request<T>(
     (headers as Record<string, string>)["Content-Type"] = "application/json";
   }
 
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers,
+      signal: controller.signal,
+    });
+  } catch (err: unknown) {
+    clearTimeout(timer);
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new ApiError(
+        "The server is taking too long to respond. It may be waking up — please try again in a moment.",
+        408
+      );
+    }
+    throw new ApiError(
+      err instanceof Error ? err.message : "Network error. Please check your connection.",
+      0
+    );
+  }
+  clearTimeout(timer);
 
   if (!res.ok) {
     let detail = res.statusText;
