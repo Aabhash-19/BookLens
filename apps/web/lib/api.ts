@@ -45,7 +45,7 @@ class ApiError extends Error {
   }
 }
 
-const TIMEOUT_MS = 25_000; // 25 s — accommodates Render cold-start
+const TIMEOUT_MS = 45_000; // 45 s — accommodates Render cold-start and external book discovery
 
 async function request<T>(
   path: string,

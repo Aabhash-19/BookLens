@@ -480,6 +480,8 @@ async def generate_recommendations(
                                 book = await _upsert_book(db, book_data)
                                 await upsert_book_embedding(db, book)
                                 new_books.append(book)
+                                if len(candidate_books) + len(new_books) >= limit:
+                                    break
                         
                         if new_books:
                             new_ids = [b.id for b in new_books]
@@ -521,11 +523,14 @@ async def generate_recommendations(
         if not b.description or len(b.description) < 150:
             # 1. Try Wikipedia
             author_name = b.authors[0].name if b.authors else ""
-            wiki_desc = await get_wikipedia_summary(b.title, author_name)
-            if wiki_desc and len(wiki_desc) > len(b.description or ""):
-                b.description = wiki_desc
-                db.add(b)
-                return
+            try:
+                wiki_desc = await asyncio.wait_for(get_wikipedia_summary(b.title, author_name), timeout=3.0)
+                if wiki_desc and len(wiki_desc) > len(b.description or ""):
+                    b.description = wiki_desc
+                    db.add(b)
+                    return
+            except Exception:
+                pass
                 
             # 2. Try Open Library Work API fallback
             if b.open_library_id:
@@ -533,7 +538,7 @@ async def generate_recommendations(
                     import httpx
                     from app.services.book_lookup import _extract_description
                     async with httpx.AsyncClient() as client:
-                        r = await client.get(f"https://openlibrary.org/works/{b.open_library_id}.json", timeout=10)
+                        r = await client.get(f"https://openlibrary.org/works/{b.open_library_id}.json", timeout=3.0)
                         if r.status_code == 200:
                             data = r.json()
                             ol_desc = _extract_description(data.get("description"))

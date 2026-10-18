@@ -239,7 +239,6 @@ async def get_recommendations(
     # Mark shown
     for rec in recs:
         rec.shown_at = datetime.utcnow()
-    await _enrich_recs_descriptions(recs, db)
     await db.flush()
 
     return [_rec_to_response(r) for r in recs]
