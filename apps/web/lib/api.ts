@@ -2,7 +2,40 @@
  * API service layer — typed fetch wrapper.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const FALLBACK_PROD_API = "https://booklets-api.onrender.com";
+const FALLBACK_DEV_API = "http://localhost:8000";
+
+export function getApiBase(): string {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (
+    envUrl &&
+    typeof envUrl === "string" &&
+    envUrl.trim() !== "" &&
+    envUrl !== "NEXT_PUBLIC_API_URL" &&
+    !envUrl.includes("${") &&
+    (envUrl.startsWith("http://") || envUrl.startsWith("https://"))
+  ) {
+    return envUrl.replace(/\/+$/, "");
+  }
+
+  // In browser, if on production domain
+  if (
+    typeof window !== "undefined" &&
+    window.location.hostname !== "localhost" &&
+    window.location.hostname !== "127.0.0.1"
+  ) {
+    return FALLBACK_PROD_API;
+  }
+
+  // During production build
+  if (process.env.NODE_ENV === "production") {
+    return FALLBACK_PROD_API;
+  }
+
+  return FALLBACK_DEV_API;
+}
+
+export const API_BASE = getApiBase();
 
 class ApiError extends Error {
   status: number;
@@ -12,7 +45,7 @@ class ApiError extends Error {
   }
 }
 
-const TIMEOUT_MS = 20_000; // 20 s — accommodates Render cold-start
+const TIMEOUT_MS = 25_000; // 25 s — accommodates Render cold-start
 
 async function request<T>(
   path: string,
@@ -34,9 +67,12 @@ async function request<T>(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
+  const base = getApiBase();
+  const fullUrl = path.startsWith("http") ? path : `${base}${path}`;
+
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, {
+    res = await fetch(fullUrl, {
       ...options,
       headers,
       signal: controller.signal,
@@ -45,23 +81,47 @@ async function request<T>(
     clearTimeout(timer);
     if (err instanceof DOMException && err.name === "AbortError") {
       throw new ApiError(
-        "The server is taking too long to respond. It may be waking up — please try again in a moment.",
+        "The server is taking too long to respond. Render may be waking up — please try again in a moment.",
         408
       );
     }
     throw new ApiError(
-      err instanceof Error ? err.message : "Network error. Please check your connection.",
+      err instanceof Error && err.message
+        ? err.message
+        : "Network error. Please check your connection.",
       0
     );
   }
   clearTimeout(timer);
 
   if (!res.ok) {
-    let detail = res.statusText;
+    let detail = "";
     try {
-      const json = await res.json();
-      detail = json.detail || detail;
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const json = await res.json();
+        detail = json.detail || json.message || "";
+      } else {
+        const text = await res.text();
+        if (!text.trim().startsWith("<")) {
+          detail = text.slice(0, 150);
+        }
+      }
     } catch {}
+
+    if (!detail || detail.trim() === "") {
+      if (res.status === 401) {
+        detail = "Incorrect email or password.";
+      } else if (res.status === 404) {
+        detail = "Resource not found.";
+      } else if (res.status === 403) {
+        detail = "Access denied.";
+      } else if (res.status >= 500) {
+        detail = "Server error. Please try again later.";
+      } else {
+        detail = `Request failed (${res.status})`;
+      }
+    }
     throw new ApiError(detail, res.status);
   }
 

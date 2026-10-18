@@ -28,7 +28,8 @@ export default function LoginPage() {
       await login(email, password);
       router.push("/scan");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Invalid credentials.");
+      const msg = err instanceof Error ? err.message : "";
+      setError(msg && msg.trim() !== "" ? msg : "Invalid credentials.");
     } finally {
       if (slowTimer) clearTimeout(slowTimer);
       setLoading(false);

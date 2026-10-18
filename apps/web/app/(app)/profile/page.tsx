@@ -136,7 +136,7 @@ export default function ProfilePage() {
     formData.append("file", file);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/auth/users/me/avatar`, {
+      const res = await fetch(`${api.getApiBase()}/api/v1/auth/users/me/avatar`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,

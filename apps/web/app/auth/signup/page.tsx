@@ -30,7 +30,8 @@ export default function SignupPage() {
       await register(email, password, displayName);
       router.push("/onboarding");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Registration failed.");
+      const msg = err instanceof Error ? err.message : "";
+      setError(msg && msg.trim() !== "" ? msg : "Registration failed.");
     } finally {
       setLoading(false);
     }
