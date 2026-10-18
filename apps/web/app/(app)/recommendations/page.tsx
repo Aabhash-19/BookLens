@@ -104,9 +104,12 @@ export default function RecommendationsPage() {
     }).catch(() => {});
   }, [token]);
 
+  const [error, setError] = useState<string | null>(null);
+
   const load = async (refresh: boolean) => {
     if (!token) return;
     refresh ? setRefreshing(true) : setLoading(true);
+    setError(null);
     try {
       const filters: any = {};
       if (filterAuthor) filters.author = filterAuthor;
@@ -117,6 +120,9 @@ export default function RecommendationsPage() {
       const data = await api.getRecommendations(token, refresh, filters);
       setRecs(data);
       setDismissed(new Set());
+    } catch (err: unknown) {
+      console.error(err);
+      setError(err instanceof Error && err.message ? err.message : "Failed to load recommendations.");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -309,8 +315,18 @@ export default function RecommendationsPage() {
           </div>
         )}
 
+        {/* Error */}
+        {!loading && error && (
+          <div className="text-center py-20 text-red-300">
+            <p className="mb-4">{error}</p>
+            <button onClick={() => load(true)} className="btn-secondary text-xs px-4 py-2 text-white">
+              <RefreshCw size={14} className="inline mr-1.5" /> Try Again
+            </button>
+          </div>
+        )}
+
         {/* Empty */}
-        {!loading && visible.length === 0 && (
+        {!loading && !error && visible.length === 0 && (
           <div className="text-center py-20">
             <Sparkles size={40} className="mx-auto mb-4 text-amber-400/40" />
             <h3 className="font-semibold text-xl mb-2">No recommendations yet</h3>

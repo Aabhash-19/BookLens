@@ -32,6 +32,7 @@ export default function LibraryPage() {
   useEffect(() => {
     if (!token) return;
     setLoading(true);
+    setError(null);
     api
       .getLibrary(token, activeTab)
       .then(setEntries)
@@ -110,7 +111,24 @@ export default function LibraryPage() {
         )}
 
         {!loading && error && (
-          <div className="text-center py-12 text-red-300">{error}</div>
+          <div className="text-center py-12 text-red-300">
+            <p className="mb-4">{error}</p>
+            {token && (
+              <button
+                onClick={() => {
+                  setError(null);
+                  setLoading(true);
+                  api.getLibrary(token, activeTab)
+                    .then(setEntries)
+                    .catch(() => setError("Failed to load library."))
+                    .finally(() => setLoading(false));
+                }}
+                className="btn-secondary text-xs px-4 py-2 text-white"
+              >
+                Try Again
+              </button>
+            )}
+          </div>
         )}
 
         {!loading && !error && entries.length === 0 && (
